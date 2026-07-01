@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>方案素材库系统</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app" v-cloak>
+        <aside class="sidebar" :class="{ 'mobile-open': showMobileFilter }">
+            <div class="logo">
+                <h2>方案素材库</h2>
+                <button class="mobile-close-btn" @click="showMobileFilter = false">&times;</button>
+            </div>
+            
+            <div class="filter-section">
+                <h3>智能筛选</h3>
+                
+                <div class="filter-group">
+                    <label>场地最大尺寸 (m)</label>
+                    <div class="size-inputs">
+                        <input type="number" v-model="filter.length" placeholder="长度(L)" step="0.1">
+                        <span>×</span>
+                        <input type="number" v-model="filter.width" placeholder="宽度(W)" step="0.1">
+                    </div>
+                    <p class="filter-hint">匹配方案尺寸 ≤ 场地尺寸</p>
+                </div>
+
+                <div class="filter-group">
+                    <label>包含模块</label>
+                    <div class="module-category-container">
+                        <div v-for="cat in moduleCategories" :key="cat.category" class="module-category">
+                            <h4 class="category-title">{{ cat.category }}</h4>
+                            <div class="checkbox-group">
+                                <div class="checkbox-label-wrapper" v-for="module in cat.modules" :key="module">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" :value="module" v-model="filter.modules">
+                                        <span class="custom-checkbox"></span>
+                                        {{ module }}
+                                    </label>
+                                    <input type="number" class="qty-input" v-if="filter.modules.includes(module)" v-model="filter.moduleQuantities[module]" min="1" placeholder="数量">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button class="btn btn-outline w-full" @click="resetFilter">重置筛选</button>
+                    <button class="btn btn-primary w-full mt-1" @click="fetchAssets">应用筛选</button>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-nav">
+                <button class="mobile-filter-toggle" @click="showMobileFilter = true">
+                    <span>≡ 筛选方案</span>
+                </button>
+                <div class="search-bar">
+                    <i class="search-icon">🔍</i>
+                    <input type="text" v-model="filter.keyword" @keyup.enter="fetchAssets" placeholder="搜索方案名称...">
+                </div>
+                <div class="nav-actions admin-only">
+                    <div class="view-toggle">
+                        <button :class="['btn-icon', { active: displayMode === 'list' }]" @click="displayMode = 'list'" title="列表视图">
+                            📄 列表
+                        </button>
+                        <button :class="['btn-icon', { active: displayMode === 'grid' }]" @click="displayMode = 'grid'" title="网格视图">
+                            🔲 网格
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" @click="openUploadModal">
+                        <i class="icon">+</i> 上传新方案
+                    </button>
+                </div>
+            </header>
+
+            <div class="gallery-container">
+                <div v-if="loading" class="loading-state">
+                    <div class="spinner"></div>
+                    <p>正在加载素材库...</p>
+                </div>
+                <div v-else-if="assets.length === 0" class="empty-state">
+                    <h3>没有找到符合条件的方案</h3>
+                    <p>尝试放宽筛选条件，或者上传新方案。</p>
+                </div>
+                <div v-else :class="displayMode === 'grid' ? 'assets-grid' : 'assets-list'">
+                    <div class="asset-card" v-for="asset in assets" :key="asset.id" @click="viewAsset(asset)">
+                        <div class="card-image">
+                            <img :src="getThumbnail(asset)" :alt="asset.name">
+                            <span class="badge">{{ asset.length }}m × {{ asset.width }}m</span>
+                        </div>
+                        <div class="card-content">
+                            <h3 class="asset-title">{{ asset.name }}</h3>
+                            <div class="module-tags">
+                                <span class="tag" v-for="mod in parseModules(asset.modules)" :key="mod">{{ mod }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- 上传/编辑弹窗 -->
+        <div class="modal-overlay" v-if="showUploadModal" @click.self="showUploadModal = false">
+            <div class="modal-content upload-modal">
+                <div class="modal-header">
+                    <h2>{{ isEditMode ? '编辑方案信息' : '上传新方案' }}</h2>
+                    <button class="close-btn" @click="showUploadModal = false">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form @submit.prevent="submitUpload">
+                        <div class="form-group">
+                            <label>方案名称 <span class="required">*</span></label>
+                            <input type="text" v-model="uploadForm.name" required placeholder="例如：全自动流水线基础版">
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>方案长度 (m) <span class="required">*</span></label>
+                                <input type="number" v-model="uploadForm.length" required step="0.1" min="0">
+                            </div>
+                            <div class="form-group">
+                                <label>方案宽度 (m) <span class="required">*</span></label>
+                                <input type="number" v-model="uploadForm.width" required step="0.1" min="0">
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>包含模块 (可多选)</label>
+                            <div class="module-category-container upload-categories">
+                                <div v-for="cat in moduleCategories" :key="cat.category" class="module-category">
+                                    <h4 class="category-title">{{ cat.category }}</h4>
+                                    <div class="checkbox-group grid-2">
+                                        <div class="checkbox-label-wrapper" v-for="module in cat.modules" :key="module">
+                                            <label class="checkbox-label">
+                                                <input type="checkbox" :value="module" v-model="uploadForm.modules">
+                                                <span class="custom-checkbox"></span>
+                                                {{ module }}
+                                            </label>
+                                            <input type="number" class="qty-input" v-if="uploadForm.modules.includes(module)" v-model="uploadForm.moduleQuantities[module]" min="1" placeholder="数量">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>平面尺寸图 <span class="required" v-if="!isEditMode">*必填</span></label>
+                                <div class="paste-zone" tabindex="0" @paste="handlePaste('planImage', $event)" @click="$refs.planImageInput.click()">
+                                    <div class="paste-text" v-if="uploadForm.planImagePreview">
+                                        <span>{{ uploadForm.planImagePreview }}</span>
+                                        <span style="font-size: 0.8rem; color: var(--primary);">点击可重新选择或粘贴</span>
+                                    </div>
+                                    <div class="paste-text" v-else>
+                                        <span>点击此处选择图片，或在此处按 <b>Ctrl+V</b> 粘贴截图</span>
+                                    </div>
+                                    <input type="file" ref="planImageInput" style="display:none" @change="handleFileChange('planImage', $event)" accept="image/*">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>效果图 <span style="font-size: 0.85rem; color: var(--text-muted);">(选填)</span></label>
+                                <div class="paste-zone" tabindex="0" @paste="handlePaste('effectImage', $event)" @click="$refs.effectImageInput.click()">
+                                    <div class="paste-text" v-if="uploadForm.effectImagePreview">
+                                        <span>{{ uploadForm.effectImagePreview }}</span>
+                                        <span style="font-size: 0.8rem; color: var(--primary);">点击可重新选择或粘贴</span>
+                                    </div>
+                                    <div class="paste-text" v-else>
+                                        <span>点击此处选择图片，或在此处按 <b>Ctrl+V</b> 粘贴截图</span>
+                                    </div>
+                                    <input type="file" ref="effectImageInput" style="display:none" @change="handleFileChange('effectImage', $event)" accept="image/*">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="button" class="btn btn-outline" @click="showUploadModal = false">取消</button>
+                            <button type="submit" class="btn btn-primary" :disabled="uploading">
+                                {{ uploading ? '保存中...' : (isEditMode ? '保存修改' : '确认上传') }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 详情预览弹窗 -->
+        <div class="modal-overlay preview-modal" v-if="selectedAsset" @click.self="selectedAsset = null">
+            <div class="modal-content preview-content">
+                <button class="btn-close preview-close" @click="selectedAsset = null">×</button>
+                <div class="preview-layout">
+                    <div class="preview-images">
+                        <div class="image-toggle">
+                            <button :class="{ active: currentView === 'plan' }" @click="currentView = 'plan'">平面尺寸图</button>
+                            <button v-if="selectedAsset.effect_image" :class="{ active: currentView === 'effect' }" @click="currentView = 'effect'">效果图</button>
+                        </div>
+                        <div class="image-wrapper">
+                            <img :src="currentView === 'plan' ? getImageUrl(selectedAsset.plan_image) : getImageUrl(selectedAsset.effect_image)" alt="预览图">
+                        </div>
+                    </div>
+                    <div class="preview-info">
+                        <h2>{{ selectedAsset.name }}</h2>
+                        <div class="info-item">
+                            <span class="label">尺寸需求</span>
+                            <span class="value">{{ selectedAsset.length }}m × {{ selectedAsset.width }}m</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">面积</span>
+                            <span class="value">{{ (selectedAsset.length * selectedAsset.width).toFixed(2) }} ㎡</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">包含模块</span>
+                            <div class="module-tags mt-1">
+                                <span class="tag tag-module" v-for="mod in parseModules(selectedAsset.modules)" :key="mod">{{ mod }}</span>
+                            </div>
+                        </div>
+                        <div class="info-item">
+                            <span class="label">上传时间</span>
+                            <span class="value">{{ new Date(selectedAsset.created_at).toLocaleDateString() }}</span>
+                        </div>
+                        <div class="preview-actions">
+                            <button class="btn btn-primary w-full" @click="downloadAsset">
+                                下载当前图片
+                            </button>
+                            <div class="admin-actions admin-only" style="display: flex; gap: 8px; margin-top: 8px;">
+                                <button class="btn btn-outline w-full" @click="openEditModal">
+                                    修改信息
+                                </button>
+                                <button class="btn btn-danger w-full" @click="deleteAssetConfirm">
+                                    删除方案
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 引入本地 Vue 3，彻底解决刷新卡顿（原本因为 CDN 网络慢导致） -->
+    <script src="vue.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

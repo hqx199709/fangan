@@ -1,0 +1,132 @@
+[
+  {
+    "id": 15,
+    "name": "全套+倾倒+2X10+3C10",
+    "length": 13.3,
+    "width": 5,
+    "modules": "进出样模块(1),离心模块(1),倾倒式进样模块(1),离心机(1),开盖模块(1),封膜模块(1),去膜模块(1),低温存储单元(1),MAGLUMI X10(2),Biossays C10(3)",
+    "plan_image": "/uploads/planImage-1780480144927-652480454.png",
+    "effect_image": "/uploads/effectImage-1780480144941-204489719.png",
+    "created_at": "2026-06-03 09:49:04"
+  },
+  {
+    "id": 14,
+    "name": "全套+倾倒+离心+3X8+008ss+E6",
+    "length": 12.4,
+    "width": 5.8,
+    "modules": "E6Plus(1),MAGLUMI X8(3),LST008 α<SS>(1),倾倒式进样模块(1),离心机(2),离心模块(2),进出样模块(1),开盖模块(1),封膜模块(1),低温存储单元(1),去膜模块(1)",
+    "plan_image": "/uploads/planImage-1780480000055-887223339.png",
+    "effect_image": "/uploads/effectImage-1780480000087-523031973.png",
+    "created_at": "2026-06-03 09:46:40"
+  },
+  {
+    "id": 13,
+    "name": "三件套+X8+C10",
+    "length": 6,
+    "width": 3.6,
+    "modules": "进出样模块(1),离心模块(1),离心机(1),开盖模块(1),Biossays C10(1),MAGLUMI X8(1)",
+    "plan_image": "/uploads/planImage-1780479890058-470498640.png",
+    "effect_image": "/uploads/effectImage-1780479890087-336072269.png",
+    "created_at": "2026-06-03 09:44:50"
+  },
+  {
+    "id": 12,
+    "name": "全套+X10+C10",
+    "length": 10.3,
+    "width": 3.5,
+    "modules": "进出样模块(1),离心模块(1),开盖模块(1),离心机(1),封膜模块(1),去膜模块(1),低温存储单元(1),Biossays C10(1),MAGLUMI X10(1)",
+    "plan_image": "/uploads/planImage-1780479756911-468308955.png",
+    "effect_image": "/uploads/effectImage-1780479756920-659335162.png",
+    "created_at": "2026-06-03 09:42:36"
+  },
+  {
+    "id": 11,
+    "name": "全套+倾倒+2X10+2C10",
+    "length": 8.4,
+    "width": 5.1,
+    "modules": "进出样模块(1),离心模块(1),开盖模块(1),封膜模块(1),低温存储单元(1),去膜模块(1),离心机(1),倾倒式进样模块(1),Biossays C10(2),MAGLUMI X10(2)",
+    "plan_image": "/uploads/planImage-1780479598564-631811654.png",
+    "effect_image": "/uploads/effectImage-1780479598570-912722051.png",
+    "created_at": "2026-06-03 09:39:58"
+  },
+  {
+    "id": 10,
+    "name": "三件套+2X8+AU5811",
+    "length": 5.4,
+    "width": 4.5,
+    "modules": "MAGLUMI X8(2),AU5811(3),离心机(1),开盖模块(1),离心模块(1),进出样模块(1)",
+    "plan_image": "/uploads/planImage-1780479492249-861812144.png",
+    "effect_image": "/uploads/effectImage-1780479492258-217769355.png",
+    "created_at": "2026-06-03 09:38:12"
+  },
+  {
+    "id": 9,
+    "name": "三件套+4X8",
+    "length": 5.8,
+    "width": 4.5,
+    "modules": "进出样模块(1),离心模块(1),离心机(1),开盖模块(1),MAGLUMI X8(4)",
+    "plan_image": "/uploads/planImage-1780479030112-781265310.png",
+    "effect_image": "/uploads/effectImage-1780479030145-164430281.png",
+    "created_at": "2026-06-03 09:30:30"
+  },
+  {
+    "id": 8,
+    "name": "三件套+2X8",
+    "length": 6,
+    "width": 4,
+    "modules": "进出样模块(1),离心模块(1),离心机(1),开盖模块(1),MAGLUMI X8(2)",
+    "plan_image": "/uploads/planImage-1780478698766-431483890.png",
+    "effect_image": "/uploads/effectImage-1780478698779-784828895.png",
+    "created_at": "2026-06-03 09:24:58"
+  },
+  {
+    "id": 7,
+    "name": "三件套+2X10+008s",
+    "length": 6.1,
+    "width": 4.5,
+    "modules": "MAGLUMI X10(2),LST008 α<S>(1),进出样模块(1),离心模块(1),离心机(1),开盖模块(1)",
+    "plan_image": "/uploads/planImage-1780478577150-47538076.png",
+    "effect_image": "/uploads/effectImage-1780478577160-328645722.png",
+    "created_at": "2026-06-03 09:22:57"
+  },
+  {
+    "id": 6,
+    "name": "三件套+2X8+008s",
+    "length": 7.8,
+    "width": 4.4,
+    "modules": "进出样模块(1),离心模块(1),离心机(1),开盖模块(1),MAGLUMI X8(2),LST008 α<S>(1)",
+    "plan_image": "/uploads/planImage-1780476759470-445541740.png",
+    "effect_image": "/uploads/effectImage-1780476759471-388844905.png",
+    "created_at": "2026-06-03 08:52:39"
+  },
+  {
+    "id": 5,
+    "name": "三件套+X8+008s",
+    "length": 5.8,
+    "width": 4.4,
+    "modules": "进出样模块(1),离心模块(1),开盖模块(1),离心机(1),MAGLUMI X8(1),LST008 α<S>(1)",
+    "plan_image": "/uploads/planImage-1780476493836-124886108.png",
+    "effect_image": "/uploads/effectImage-1780476493837-428015563.png",
+    "created_at": "2026-06-03 08:48:13"
+  },
+  {
+    "id": 4,
+    "name": "三件套+2X8",
+    "length": 4.6,
+    "width": 3.3,
+    "modules": "进出样模块(1),离心模块(1),开盖模块(1),MAGLUMI X8(2)",
+    "plan_image": "/uploads/planImage-1780475606099-195458008.png",
+    "effect_image": "/uploads/effectImage-1780475606099-717314675.png",
+    "created_at": "2026-06-03 08:33:26"
+  },
+  {
+    "id": 3,
+    "name": "全套+倾倒+2X10+2C10",
+    "length": 5.3,
+    "width": 8.5,
+    "modules": "进出样模块(1),离心模块(1),开盖模块(1),封膜模块(1),低温存储单元(1),去膜模块(1),离心机(1),倾倒式进样模块(1),Biossays C10(2),MAGLUMI X10(2)",
+    "plan_image": "/uploads/planImage-1779961086506-475384138.png",
+    "effect_image": "/uploads/effectImage-1779961086513-32910960.png",
+    "created_at": "2026-05-28 09:38:06"
+  }
+]
