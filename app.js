@@ -1,4 +1,4 @@
-const { createApp, ref, onMounted } = Vue;
+const { createApp, ref, onMounted, watch } = Vue;
 
 const API_BASE = 'http://localhost:3000';
 
@@ -124,6 +124,10 @@ createApp({
             };
             fetchAssets();
         };
+
+        watch(filter, () => {
+            fetchAssets();
+        }, { deep: true });
 
         const handlePaste = (field, event) => {
             const items = (event.clipboardData || event.originalEvent.clipboardData).items;
