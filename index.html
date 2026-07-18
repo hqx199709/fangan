@@ -21,16 +21,16 @@
                 <div class="filter-group">
                     <label>场地最大尺寸 (m)</label>
                     <div class="size-inputs">
-                        <input type="number" v-model="filter.length" placeholder="长度(L)" step="0.1">
-                        <span>×</span>
-                        <input type="number" v-model="filter.width" placeholder="宽度(W)" step="0.1">
+                        <input type="number" v-model="filter.length" placeholder="长度(L)" min="0" step="0.1">
+                        <span class="multiply">×</span>
+                        <input type="number" v-model="filter.width" placeholder="宽度(W)" min="0" step="0.1">
                     </div>
-                    <p class="filter-hint">匹配方案尺寸 ≤ 场地尺寸</p>
+                    <div class="helper-text">匹配方案尺寸 ≤ 场地尺寸</div>
                 </div>
 
                 <div class="filter-group">
                     <label>包含模块</label>
-                    <div class="module-category-container">
+                    <div class="module-categories">
                         <div v-for="cat in moduleCategories" :key="cat.category" class="module-category">
                             <h4 class="category-title">{{ cat.category }}</h4>
                             <div class="checkbox-group">
@@ -47,10 +47,7 @@
                     </div>
                 </div>
 
-                <div class="filter-actions">
-                    <button class="btn btn-outline w-full" @click="resetFilter">重置筛选</button>
-                    <button class="btn btn-primary w-full mt-1" @click="fetchAssets">应用筛选</button>
-                </div>
+                <button class="btn btn-primary w-full mt-4" @click="resetFilter">重置筛选</button>
             </div>
         </aside>
 
@@ -78,25 +75,30 @@
                 </div>
             </header>
 
-            <div class="gallery-container">
+            <div class="content-area">
                 <div v-if="loading" class="loading-state">
                     <div class="spinner"></div>
-                    <p>正在加载素材库...</p>
+                    <p>加载中...</p>
                 </div>
+                
                 <div v-else-if="assets.length === 0" class="empty-state">
-                    <h3>没有找到符合条件的方案</h3>
-                    <p>尝试放宽筛选条件，或者上传新方案。</p>
+                    <div class="empty-icon">📂</div>
+                    <p>没有找到符合条件的方案</p>
                 </div>
-                <div v-else :class="displayMode === 'grid' ? 'assets-grid' : 'assets-list'">
-                    <div class="asset-card" v-for="asset in assets" :key="asset.id" @click="viewAsset(asset)">
+
+                <div v-else :class="['assets-container', displayMode === 'list' ? 'assets-list' : 'assets-grid']">
+                    <div v-for="asset in assets" :key="asset.id" class="asset-card" @click="viewAsset(asset)">
                         <div class="card-image">
-                            <img :src="getThumbnail(asset)" :alt="asset.name">
-                            <span class="badge">{{ asset.length }}m × {{ asset.width }}m</span>
+                            <img :src="getThumbnail(asset.plan_image)" :alt="asset.name">
                         </div>
                         <div class="card-content">
-                            <h3 class="asset-title">{{ asset.name }}</h3>
-                            <div class="module-tags">
-                                <span class="tag" v-for="mod in parseModules(asset.modules)" :key="mod">{{ mod }}</span>
+                            <h3>{{ asset.name }}</h3>
+                            <div class="card-meta">
+                                <span><i class="icon">📐</i> {{ asset.length }}m × {{ asset.width }}m</span>
+                            </div>
+                            <div class="module-tags mt-1">
+                                <span class="tag" v-for="mod in parseModules(asset.modules).slice(0, 3)" :key="mod">{{ mod }}</span>
+                                <span class="tag" v-if="parseModules(asset.modules).length > 3">...</span>
                             </div>
                         </div>
                     </div>
@@ -109,81 +111,78 @@
             <div class="modal-content upload-modal">
                 <div class="modal-header">
                     <h2>{{ isEditMode ? '编辑方案信息' : '上传新方案' }}</h2>
-                    <button class="close-btn" @click="showUploadModal = false">&times;</button>
+                    <button class="btn-close" @click="showUploadModal = false">×</button>
                 </div>
                 <div class="modal-body">
-                    <form @submit.prevent="submitUpload">
+                    <div class="form-group">
+                        <label>方案名称 <span class="required">*</span></label>
+                        <input type="text" v-model="uploadForm.name" placeholder="例如：全套+倾倒+2X10">
+                    </div>
+                    
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>方案名称 <span class="required">*</span></label>
-                            <input type="text" v-model="uploadForm.name" required placeholder="例如：全自动流水线基础版">
+                            <label>长度(L) m <span class="required">*</span></label>
+                            <input type="number" v-model="uploadForm.length" min="0" step="0.1">
                         </div>
-
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>方案长度 (m) <span class="required">*</span></label>
-                                <input type="number" v-model="uploadForm.length" required step="0.1" min="0">
-                            </div>
-                            <div class="form-group">
-                                <label>方案宽度 (m) <span class="required">*</span></label>
-                                <input type="number" v-model="uploadForm.width" required step="0.1" min="0">
-                            </div>
-                        </div>
-
                         <div class="form-group">
-                            <label>包含模块 (可多选)</label>
-                            <div class="module-category-container upload-categories">
-                                <div v-for="cat in moduleCategories" :key="cat.category" class="module-category">
-                                    <h4 class="category-title">{{ cat.category }}</h4>
-                                    <div class="checkbox-group grid-2">
-                                        <div class="checkbox-label-wrapper" v-for="module in cat.modules" :key="module">
-                                            <label class="checkbox-label">
-                                                <input type="checkbox" :value="module" v-model="uploadForm.modules">
-                                                <span class="custom-checkbox"></span>
-                                                {{ module }}
-                                            </label>
-                                            <input type="number" class="qty-input" v-if="uploadForm.modules.includes(module)" v-model="uploadForm.moduleQuantities[module]" min="1" placeholder="数量">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <label>宽度(W) m <span class="required">*</span></label>
+                            <input type="number" v-model="uploadForm.width" min="0" step="0.1">
                         </div>
+                    </div>
 
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label>平面尺寸图 <span class="required" v-if="!isEditMode">*必填</span></label>
-                                <div class="paste-zone" tabindex="0" @paste="handlePaste('planImage', $event)" @click="$refs.planImageInput.click()">
-                                    <div class="paste-text" v-if="uploadForm.planImagePreview">
-                                        <span>{{ uploadForm.planImagePreview }}</span>
-                                        <span style="font-size: 0.8rem; color: var(--primary);">点击可重新选择或粘贴</span>
+                    <div class="form-group">
+                        <label>包含模块 <span class="required">*</span></label>
+                        <div class="module-categories upload-modules">
+                            <div v-for="cat in moduleCategories" :key="cat.category" class="module-category">
+                                <h4 class="category-title">{{ cat.category }}</h4>
+                                <div class="checkbox-group">
+                                    <div class="checkbox-label-wrapper" v-for="module in cat.modules" :key="module">
+                                        <label class="checkbox-label">
+                                            <input type="checkbox" :value="module" v-model="uploadForm.modules">
+                                            <span class="custom-checkbox"></span>
+                                            {{ module }}
+                                        </label>
+                                        <input type="number" class="qty-input" v-if="uploadForm.modules.includes(module)" v-model="uploadForm.moduleQuantities[module]" min="1" placeholder="数量">
                                     </div>
-                                    <div class="paste-text" v-else>
-                                        <span>点击此处选择图片，或在此处按 <b>Ctrl+V</b> 粘贴截图</span>
-                                    </div>
-                                    <input type="file" ref="planImageInput" style="display:none" @change="handleFileChange('planImage', $event)" accept="image/*">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>效果图 <span style="font-size: 0.85rem; color: var(--text-muted);">(选填)</span></label>
-                                <div class="paste-zone" tabindex="0" @paste="handlePaste('effectImage', $event)" @click="$refs.effectImageInput.click()">
-                                    <div class="paste-text" v-if="uploadForm.effectImagePreview">
-                                        <span>{{ uploadForm.effectImagePreview }}</span>
-                                        <span style="font-size: 0.8rem; color: var(--primary);">点击可重新选择或粘贴</span>
-                                    </div>
-                                    <div class="paste-text" v-else>
-                                        <span>点击此处选择图片，或在此处按 <b>Ctrl+V</b> 粘贴截图</span>
-                                    </div>
-                                    <input type="file" ref="effectImageInput" style="display:none" @change="handleFileChange('effectImage', $event)" accept="image/*">
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="form-actions">
-                            <button type="button" class="btn btn-outline" @click="showUploadModal = false">取消</button>
-                            <button type="submit" class="btn btn-primary" :disabled="uploading">
-                                {{ uploading ? '保存中...' : (isEditMode ? '保存修改' : '确认上传') }}
-                            </button>
+                    <div class="form-group">
+                        <label>平面尺寸图 {{ isEditMode ? '' : '<span class="required">*</span>' }}</label>
+                        <div class="paste-zone" tabindex="0" @paste="(e) => handlePaste('plan_image', e)">
+                            <div v-if="uploadForm.plan_image" class="paste-success">
+                                ✅ 已选择/粘贴平面图: {{ uploadForm.plan_image.name || '粘贴的图片' }}
+                            </div>
+                            <div v-else class="paste-text">
+                                <span><i class="icon">📋</i> 选中此处后按 <b>Ctrl+V</b> 粘贴截图</span>
+                                <span style="font-size: 12px; color: #94a3b8;">或者点击下方选择文件</span>
+                            </div>
+                            <input type="file" accept="image/*" @change="(e) => handleFileChange('plan_image', e)" class="mt-2">
                         </div>
-                    </form>
+                    </div>
+
+                    <div class="form-group">
+                        <label>效果图 (可选)</label>
+                        <div class="paste-zone" tabindex="0" @paste="(e) => handlePaste('effect_image', e)">
+                            <div v-if="uploadForm.effect_image" class="paste-success">
+                                ✅ 已选择/粘贴效果图: {{ uploadForm.effect_image.name || '粘贴的图片' }}
+                            </div>
+                            <div v-else class="paste-text">
+                                <span><i class="icon">📋</i> 选中此处后按 <b>Ctrl+V</b> 粘贴截图</span>
+                                <span style="font-size: 12px; color: #94a3b8;">或者点击下方选择文件</span>
+                            </div>
+                            <input type="file" accept="image/*" @change="(e) => handleFileChange('effect_image', e)" class="mt-2">
+                        </div>
+                    </div>
+
+                    <div class="modal-actions">
+                        <button class="btn btn-outline" @click="showUploadModal = false">取消</button>
+                        <button class="btn btn-primary" @click="submitUpload" :disabled="uploading">
+                            {{ uploading ? '保存中...' : '保存方案' }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -241,7 +240,6 @@
         </div>
     </div>
 
-    <!-- 引入本地 Vue 3，彻底解决刷新卡顿（原本因为 CDN 网络慢导致） -->
     <script src="vue.js"></script>
     <script src="app.js"></script>
 </body>
